@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  	<meta charset="UTF-8">
+  	<title>Lock</title>
+  	<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css'>
+	<link rel='stylesheet' href='https://unicons.iconscout.com/release/v2.1.9/css/unicons.css'>
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+	<div class="section">
+		<div class="container">
+			<div class="row full-height justify-content-center">
+				<div class="col-12 text-center align-self-center py-5">
+					<div class="section pb-5 pt-5 pt-sm-2 text-center">
+
+						<h6 class="mb-0 pb-3"><span>Log In </span><span>Sign Up</span></h6>
+			          	<input class="checkbox" type="checkbox" id="reg-log" name="reg-log"/>
+			          	<label for="reg-log"></label>
+
+						<div class="card-3d-wrap mx-auto">
+							<div class="card-3d-wrapper">
+
+
+								<div class="card-front">
+									<div class="center-wrap">
+										<div class="section text-center">
+											<h4 class="mb-4 pb-3">Validate PIN</h4>
+											
+											<form id="loginForm" action="/login" method="post">
+												<div class="form-group">
+													<input type="text" name="id" class="form-style" placeholder="ID" id="loginId" autocomplete="off">
+													<i class="input-icon uil uil-user"></i>
+												</div>	
+												<div class="form-group mt-2">
+													<input type="text" name="pin" class="form-style" placeholder="OTP" id="pin" autocomplete="off">
+													<i class="input-icon uil uil-lock-alt"></i>
+												</div>
+
+												<input class="btn mt-4" type="submit" value="Enter">
+												
+												<input type="hidden" id="secret" name="secret">
+												<br><br>
+												<p id="validationResult">
+													PIN IS VALID
+												</p>
+
+												<!--
+												<a href="#" class="btn mt-4">submit</a>
+												<p class="mb-0 mt-4 text-center"><a href="#0" class="link">Forgot your password?</a></p>
+												-->
+											</form>
+				      					</div>
+			      					</div>
+			      				</div>
+
+
+								<div class="card-back">
+									<div class="center-wrap">
+										<div class="section text-center">
+											<h4 class="mb-4 pb-3">Generate QR</h4>
+
+											<form action="/generate" method="post">
+												<div class="form-group">
+													<input type="text" name="id" class="form-style" placeholder="ID" id="id" autocomplete="off">
+													<i class="input-icon uil uil-user"></i>
+												</div>	
+
+												<!--
+												<div class="form-group mt-2">
+													<input type="email" name="logemail" class="form-style" placeholder="Your Email" id="logemail" autocomplete="off">
+													<i class="input-icon uil uil-at"></i>
+												</div>	
+												
+												<div class="form-group mt-2">
+													<input type="password" name="logpass" class="form-style" placeholder="Your Password" id="logpass" autocomplete="off">
+													<i class="input-icon uil uil-lock-alt"></i>
+												</div>
+												<a href="#" class="btn mt-4">submit</a>
+												-->
+
+												<input class="btn mt-4" type="submit" value="Generate QR">
+
+											</form>
+											<br>
+											<div id="qrCode"></div>
+
+				      					</div>
+			      					</div>
+			      				</div>
+
+
+
+			      			</div>
+			      		</div>
+			      	</div>
+		      	</div>
+	      	</div>
+	    </div>
+	</div>
+
+	<script>
+		const generateForm = document.querySelector('form[action="/generate"]');
+		const qrCodeDiv = document.getElementById('qrCode');
+		const loginForm = document.querySelector('form[action="/login"]');
+		const secretInput = document.getElementById('secret');
+		const validateButton = document.querySelector('input[type="submit"][value="Validate PIN"]');
+		const validationResult = document.getElementById('validationResult');
+	
+		generateForm.addEventListener('submit', event => {
+		  event.preventDefault(); 
+	
+		  const id = document.getElementById('id').value;
+	
+		  fetch('/generate', {
+			method: 'POST',
+			headers: {
+			  'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: new URLSearchParams({
+			  id: id
+			})
+		  })
+			.then(response => response.json())
+			.then(data => {
+			  const qrCodeImg = document.createElement('img');
+			  qrCodeImg.src = data.qrCode;
+			  qrCodeDiv.innerHTML = '';
+			  qrCodeDiv.appendChild(qrCodeImg);
+			  secretInput.value = data.secret;
+			  validateButton.disabled = false;
+			})
+			.catch(error => {
+			  console.error('Error generating QR code:', error);
+			});
+		});
+	
+		loginForm.addEventListener('submit', event => {
+		  event.preventDefault();
+	
+		  const id = document.getElementById('loginId').value;
+		  const pin = document.getElementById('pin').value;
+		  const secret = document.getElementById('secret').value;
+	
+		  fetch('/login', {
+			method: 'POST',
+			headers: {
+			  'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: new URLSearchParams({
+			  id: id,
+			  pin: pin,
+			  secret: secret
+			})
+		  })
+			.then(response => response.text())
+			.then(result => {
+			  validationResult.textContent = result;
+			})
+			.catch(error => {
+			  console.error('Error validating PIN:', error);
+			});
+		});
+	  </script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Google Authenticator Validation</title>
+  <link rel="stylesheet" type="text/css" href="index.css" /> 
+
+</head>
+<body>
+  <h1>Generate QR Code and Validate PIN</h1>
+
+  <h2>Generate QR Code</h2>
+  <form action="/generate" method="post">
+    <label for="id">ID:</label>
+    <input type="text" id="id" name="id"><br><br>
+    <input type="submit" value="Generate QR Code">
+  </form>
+
+  <div id="qrCode"></div>
+  
+  <hr>
+  
+  <h2>Validate PIN</h2>
+  <form id="loginForm" action="/login" method="post">
+    <label for="id">ID:</label>
+    <input type="text" id="loginId" name="id"><br><br>
+
+    <label for="pin">PIN:</label>
+    <input type="text" id="pin" name="pin"><br><br>
+
+    <input type="hidden" id="secret" name="secret">
+    <input type="submit" value="Validate PIN" disabled>
+    <p id="validationResult"></p>
+  </form>
+
+  <script>
+    const generateForm = document.querySelector('form[action="/generate"]');
+    const qrCodeDiv = document.getElementById('qrCode');
+    const loginForm = document.querySelector('form[action="/login"]');
+    const secretInput = document.getElementById('secret');
+    const validateButton = document.querySelector('input[type="submit"][value="Validate PIN"]');
+    const validationResult = document.getElementById('validationResult');
+
+    generateForm.addEventListener('submit', event => {
+      event.preventDefault(); 
+
+      const id = document.getElementById('id').value;
+
+      fetch('/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          id: id
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          const qrCodeImg = document.createElement('img');
+          qrCodeImg.src = data.qrCode;
+          qrCodeDiv.innerHTML = '';
+          qrCodeDiv.appendChild(qrCodeImg);
+          secretInput.value = data.secret;
+          validateButton.disabled = false;
+        })
+        .catch(error => {
+          console.error('Error generating QR code:', error);
+        });
+    });
+
+    loginForm.addEventListener('submit', event => {
+      event.preventDefault();
+
+      const id = document.getElementById('loginId').value;
+      const pin = document.getElementById('pin').value;
+      const secret = document.getElementById('secret').value;
+
+      fetch('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          id: id,
+          pin: pin,
+          secret: secret
+        })
+      })
+        .then(response => response.text())
+        .then(result => {
+          console.log(result);
+          validationResult.textContent = result;
+        })
+        .catch(error => {
+          console.error('Error validating PIN:', error);
+        });
+    });
+  </script>
+</body>
+</html>
